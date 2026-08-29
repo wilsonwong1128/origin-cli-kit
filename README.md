@@ -76,6 +76,21 @@ npm start
 npm run open
 ```
 
+## Tests
+
+Early beta. The test API and npm scripts can change without notice. Software is provided **AS IS**, with no warranty.
+
+```bash
+npm test          # unit + UI (mocked; never hits live Origin)
+npm run test:unit
+npm run test:ui
+npm run test:e2e  # Playwright, mocked IPC, no Origin CLI
+npm run test:live # skipped unless Origin CLI is already signed in and a namespace is already claimed
+```
+
+Live tests only create disposable `ogg-test-*` repos (Internal/Private) and always `origin repo delete owner/name -y` in `finally`. They never run `create-mirrored` and never touch other Wilson repos.
+
+
 ## 打包安裝程式
 
 ```powershell

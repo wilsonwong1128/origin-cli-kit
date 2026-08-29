@@ -10,3 +10,7 @@ agent-tools/
 *.tsbuildinfo
 .DS_Store
 .env*
+playwright-report/
+test-results/
+blob-report/
+
