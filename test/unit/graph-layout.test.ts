@@ -58,7 +58,7 @@ describe("layoutGraph", () => {
       commit("a", []),
     ])
     expect(laneCount(rows)).toBeLessThanOrEqual(2)
-    expect(rows.at(-1)?.column).toBe(0)
+    expect(Math.max(...rows.map((row) => row.column))).toBeLessThanOrEqual(1)
   })
 
   it("dedupes identical line keys on a commit", () => {
@@ -95,7 +95,21 @@ describe("renderGlyph", () => {
       color: 1,
       lines: [{ from: 1, to: 0, color: 0 }],
     }
-    expect(renderGlyph(right, 2)).toContain("╲")
-    expect(renderGlyph(left, 2)).toContain("╱")
+    expect(renderGlyph(right, 2)).toBe("●│")
+    expect(renderGlyph(left, 2)).toBe("│●")
+    expect(
+      renderGlyph(
+        {
+          commit: commit("pass", ["a"]),
+          column: 2,
+          color: 2,
+          lines: [
+            { from: 0, to: 1, color: 1 },
+            { from: 2, to: 1, color: 2 },
+          ],
+        },
+        3,
+      ),
+    ).toBe("╲│●")
   })
 })

@@ -141,7 +141,7 @@ describe("Origin URL construction and `origin repo list` parsing", () => {
   })
 
   it("surfaces origin stderr when `repo list` fails", async () => {
-    withOrigin(() => ({ error: Object.assign(new Error("fail"), { stderr: "auth required\n" }) }))
+    withOrigin(() => ({ error: new Error("fail"), stderr: "auth required\n" }))
     await expect(listOriginRepos()).rejects.toThrow("auth required")
   })
 })

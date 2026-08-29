@@ -66,8 +66,9 @@ describe("composeBranchName", () => {
   })
 
   it("still validates the composed name", () => {
-    expect(() => composeBranchName("feature", "")).toThrow(/1–80 characters/)
+    expect(() => composeBranchName("feature", "")).toThrow(/cannot start/)
     expect(() => composeBranchName("custom", "-nope")).toThrow(/cannot start/)
+    expect(() => composeBranchName("custom", "")).toThrow(/1–80 characters/)
   })
 })
 
