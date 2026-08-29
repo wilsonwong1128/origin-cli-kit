@@ -59,6 +59,6 @@ if (wipe) {
     }).unref()
   }
 } else {
-  log("已卸載捷徑、依賴同組裝檔。原始碼仲喺度，之後可再撲 Install-and-Open。")
+  log("已卸載捷徑、依賴同組裝檔。原始碼仲喺度，之後可再撳 Install-and-Open。")
   log("若要連資料夾都刪：node scripts/uninstall-app.mjs --remove-app-dir --confirm=UNINSTALL")
 }

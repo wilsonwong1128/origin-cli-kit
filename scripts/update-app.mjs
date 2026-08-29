@@ -14,7 +14,7 @@ function sleep(ms) {
 sleep(Number.isFinite(waitMs) ? waitMs : 0)
 
 if (!existsSync(path.join(root, ".git"))) {
-  throw new Error("呢個資料夾唔係 git clone，冇得自動更新。請重新下載 / clone 最新版，再撲 Install-and-Open。")
+  throw new Error("呢個資料夾唔係 git clone，冇得自動更新。請重新下載 / clone 最新版，再撳 Install-and-Open。")
 }
 
 const dirty = runGit(["status", "--porcelain"])
