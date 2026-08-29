@@ -163,7 +163,7 @@ test.describe("Git Graph (no Origin CLI, IPC mocked)", () => {
     await injectMockedDesktop(page)
     await page.goto("/")
 
-    await expect(page.getByText("Signed out")).toBeVisible()
+    await expect(page.locator(".pill")).toHaveText("Signed out")
     await expect(page.getByRole("button", { name: "Log in to Origin" })).toBeVisible()
     await expect(page.getByText("One install. One window.")).toBeVisible()
 
@@ -172,7 +172,7 @@ test.describe("Git Graph (no Origin CLI, IPC mocked)", () => {
     await page.getByPlaceholder("my-app").fill("harbor-notes")
     await page.locator(".modal").last().getByRole("button", { name: "New project" }).click()
 
-    await expect(page.getByText("harbor-notes")).toBeVisible()
+    await expect(page.locator("aside .name")).toHaveText("harbor-notes")
     await expect(page.getByText("Colored lines are branches / merges")).toBeVisible()
 
     const strokes = await page.locator("svg.graph-svg path").evaluateAll((nodes) =>
@@ -188,7 +188,7 @@ test.describe("Git Graph (no Origin CLI, IPC mocked)", () => {
     })
     await page.getByRole("button", { name: "Switch repo" }).click()
     await page.getByRole("button", { name: "Open folder" }).click()
-    await expect(page.getByText("ogg-beta")).toBeVisible()
+    await expect(page.locator("aside .name")).toHaveText("ogg-beta")
     await expect(page.getByText("wilsonwong/ogg-test-beta")).toBeVisible()
 
     await page.getByRole("button", { name: "Pull requests" }).click()
@@ -201,6 +201,6 @@ test.describe("Git Graph (no Origin CLI, IPC mocked)", () => {
     await expect(page.locator(".modal.safety")).toBeVisible()
     await page.locator(".modal.safety").getByRole("button", { name: "Confirm" }).click()
     await page.getByRole("button", { name: "Pull requests" }).click()
-    await expect(page.getByText(/merged/i)).toBeVisible()
+    await expect(page.locator(".pr-item")).toContainText(/merged/i)
   })
 })
