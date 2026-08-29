@@ -11,7 +11,7 @@ $Extract = Join-Path $Tools "_node_extract"
 $Zip = Join-Path $env:TEMP $ZipName
 
 if (Test-Path (Join-Path $Dest "node.exe")) {
-  Write-Host "已有便撤 Node：$Dest"
+  Write-Host "已有便攜 Node：$Dest"
   exit 0
 }
 
