@@ -3,7 +3,7 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 title Origin Git Graph Update
 echo.
-echo  Origin Git Graph — Update
+echo  Origin Git Graph - Update
 echo  Pulls the latest main (fast-forward only), rebuilds, then opens the app.
 echo.
 if exist "%~dp0.tools\node\node.exe" set "PATH=%~dp0.tools\node;%PATH%"

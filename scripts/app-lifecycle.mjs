@@ -181,10 +181,34 @@ export function resolveNode() {
   throw new Error("找不到 node。請先用 Install-and-Open 安裝，或把 Node 加進 PATH。")
 }
 
+export function resolveGit() {
+  if (process.platform !== "win32") return "git"
+  const which = spawnSync("where.exe", ["git.exe"], { encoding: "utf8", windowsHide: true })
+  const exe = String(which.stdout ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => line.toLowerCase().endsWith("git.exe") && existsSync(line))
+  if (exe) return exe
+  for (const candidate of [
+    "C:\\Program Files\\Git\\cmd\\git.exe",
+    "C:\\Program Files\\Git\\bin\\git.exe",
+  ]) {
+    if (existsSync(candidate)) return candidate
+  }
+  return "git.exe"
+}
+
 export function runGit(args) {
-  const { stdout } = execFileSync("git", ["-C", root, ...args], {
+  const result = spawnSync(resolveGit(), ["-C", root, ...args], {
     encoding: "utf8",
     windowsHide: true,
+    maxBuffer: 32 * 1024 * 1024,
   })
-  return stdout.trim()
+  if (result.error) throw result.error
+  const stdout = String(result.stdout ?? "")
+  const stderr = String(result.stderr ?? "")
+  if (result.status !== 0) {
+    throw new Error((stderr || stdout || `git ${args.join(" ")} failed`).trim())
+  }
+  return stdout.replace(/\r\n/g, "\n").trim()
 }
