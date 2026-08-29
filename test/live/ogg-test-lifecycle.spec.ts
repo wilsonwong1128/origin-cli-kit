@@ -64,24 +64,45 @@ function assertDisposableName(fullName: string): { owner: string; name: string }
   return { owner, name }
 }
 
-async function liveGate(): Promise<{ cli: string; owner: string } | null> {
-  const cli = await resolveOriginCli()
-  if (!cli) return null
+function isUnclaimedNamespace(error: unknown): boolean {
+  const text = error instanceof Error ? error.message : String(error)
+  return /not (yet )?claimed|claim (a |your )?(codebase|namespace)|no namespace|namespace .*(missing|not|unclaimed)|codebase name|origin is not enabled|enable origin/i.test(
+    text,
+  )
+}
+
+async function isAuthenticated(cli: string): Promise<boolean> {
   const status = await runOrigin(cli, ["auth", "status"]).catch((error: Error) => ({
     stdout: "",
     stderr: error.message,
   }))
-  const raw = `${status.stdout}\n${status.stderr}`
-  if (!/Token:\s+valid/i.test(raw)) return null
-  const listed = await runOrigin(cli, ["repo", "list"]).catch(() => null)
-  if (!listed) return null
-  const first = listed.stdout
-    .split("\n")
-    .map((line) => line.trim())
-    .find((line) => line.includes("/") && !line.startsWith("http"))
-  const owner = first?.split("/")[0]
-  if (!owner) return null
-  return { cli, owner }
+  return /Token:\s+valid/i.test(`${status.stdout}\n${status.stderr}`)
+}
+
+/**
+ * Live runs when the official CLI is installed and already signed in.
+ * An empty `origin repo list` is not a skip: `origin repo create <name>`
+ * (no slash) creates into the claimed namespace. Owner is resolved after
+ * create via `origin repo view --json org,name`, never from the first list line.
+ */
+async function liveGate(): Promise<{ cli: string } | null> {
+  const cli = await resolveOriginCli()
+  if (!cli) return null
+  if (!(await isAuthenticated(cli))) return null
+  return { cli }
+}
+
+async function resolveCreatedFullName(cli: string, name: string): Promise<{ fullName: string; visibility?: string }> {
+  const viewed = await runOrigin(cli, ["repo", "view", name, "--json", "org,name,visibility"]).catch(async () =>
+    runOrigin(cli, ["repo", "view", name, "--json", "org,name"]),
+  )
+  const parsed = JSON.parse(viewed.stdout) as { org?: string; name?: string; visibility?: string }
+  if (!parsed.org || !parsed.name) {
+    throw new Error(`origin repo view did not return org/name for ${name}`)
+  }
+  const fullName = `${parsed.org}/${parsed.name}`
+  assertDisposableName(fullName)
+  return { fullName, visibility: parsed.visibility }
 }
 
 async function deleteIfCreated(cli: string, fullName: string): Promise<void> {
@@ -98,30 +119,37 @@ describe("live Origin (ogg-test-* only)", () => {
     }
 
     const name = `ogg-test-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
-    let fullName = `${gate.owner}/${name}`
-    assertDisposableName(fullName)
-
     const created: string[] = []
+    let createSucceeded = false
     try {
       const createArgs = ["repo", "create", name]
+      expect(name.includes("/")).toBe(false)
       expect(createArgs).not.toContain("create-mirrored")
       expect(createArgs.join(" ")).not.toMatch(/mirror/)
-      await runOrigin(gate.cli, createArgs)
-      created.push(fullName)
-
-      const viewed = await runOrigin(gate.cli, ["repo", "view", name, "--json", "org,name,visibility"]).catch(
-        async () => runOrigin(gate.cli, ["repo", "view", name, "--json", "org,name"]),
-      )
-      const parsed = JSON.parse(viewed.stdout) as { org?: string; name?: string; visibility?: string }
-      if (parsed.org && parsed.name) {
-        fullName = `${parsed.org}/${parsed.name}`
-        assertDisposableName(fullName)
-        created[0] = fullName
+      try {
+        await runOrigin(gate.cli, createArgs)
+        createSucceeded = true
+      } catch (error) {
+        if (isUnclaimedNamespace(error)) {
+          ctx.skip()
+          return
+        }
+        throw error
       }
-      if (parsed.visibility && !/private|internal/i.test(parsed.visibility)) {
-        throw new Error(`Created repo visibility was ${parsed.visibility}; expected Internal/Private`)
+
+      const resolved = await resolveCreatedFullName(gate.cli, name)
+      created.push(resolved.fullName)
+      if (resolved.visibility && !/private|internal/i.test(resolved.visibility)) {
+        throw new Error(`Created repo visibility was ${resolved.visibility}; expected Internal/Private`)
       }
     } finally {
+      if (createSucceeded && created.length === 0) {
+        try {
+          created.push((await resolveCreatedFullName(gate.cli, name)).fullName)
+        } catch {
+          // delete still runs below if resolve recovered nothing
+        }
+      }
       const errors: string[] = []
       for (const repo of created) {
         try {
@@ -129,6 +157,9 @@ describe("live Origin (ogg-test-* only)", () => {
         } catch (error) {
           errors.push(error instanceof Error ? error.message : String(error))
         }
+      }
+      if (createSucceeded && created.length === 0) {
+        errors.push(`created ${name} but could not resolve owner/name for origin repo delete`)
       }
       if (errors.length) {
         throw new Error(`Failed to delete disposable live repo(s): ${errors.join("; ")}`)
