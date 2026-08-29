@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest"
-import { beforeEach } from "vitest"
+import { cleanup } from "@testing-library/react"
+import { afterEach, beforeEach } from "vitest"
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
@@ -21,4 +22,8 @@ beforeEach(() => {
     "ogg:settings",
     JSON.stringify({ locale: "en", theme: "dark", density: "comfortable" }),
   )
+})
+
+afterEach(() => {
+  cleanup()
 })

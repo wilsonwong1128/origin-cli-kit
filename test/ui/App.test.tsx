@@ -9,7 +9,8 @@ async function renderApp() {
   const desktop = createDesktopMock()
   installDesktopMock(desktop)
   render(<App />)
-  expect(await screen.findByText("Signed out")).toBeInTheDocument()
+  expect(await screen.findByRole("button", { name: "Log in to Origin" })).toBeInTheDocument()
+  expect(document.querySelector(".pill")).toHaveTextContent("Signed out")
   return desktop
 }
 
@@ -17,12 +18,13 @@ describe("App (IPC mocked)", () => {
   it("starts signed out with no Origin CLI session and shows the welcome pane", async () => {
     await renderApp()
     expect(screen.getByRole("button", { name: "Log in to Origin" })).toBeEnabled()
+    expect(document.querySelector(".pill")).toHaveTextContent("Signed out")
     expect(screen.getByText("One install. One window.")).toBeInTheDocument()
     expect(screen.getByText("No repository open")).toBeInTheDocument()
     expect(screen.queryByText("Switch repo")).not.toBeInTheDocument()
   })
 
-  it("creates a new project through the mocked desktop API and then switches repo", async () => {
+  it("creates a new project through the mocked desktop API", async () => {
     const user = userEvent.setup()
     const desktop = await renderApp()
 
@@ -46,7 +48,7 @@ describe("App (IPC mocked)", () => {
     desktop.openFolder = async () => "/tmp/ogg-alpha"
     installDesktopMock(desktop)
     render(<App />)
-    await screen.findByText("Signed out")
+    await screen.findByRole("button", { name: "Log in to Origin" })
 
     await user.click(screen.getByRole("button", { name: "Pick a local or Origin repo" }))
     await user.click(screen.getByRole("button", { name: "Open folder" }))
@@ -65,7 +67,7 @@ describe("App (IPC mocked)", () => {
     desktop.openFolder = async () => "/tmp/ogg-alpha"
     installDesktopMock(desktop)
     render(<App />)
-    await screen.findByText("Signed out")
+    await screen.findByRole("button", { name: "Log in to Origin" })
     await user.click(screen.getByRole("button", { name: "Pick a local or Origin repo" }))
     await user.click(screen.getByRole("button", { name: "Open folder" }))
     await screen.findByText("ogg-alpha")
@@ -75,7 +77,7 @@ describe("App (IPC mocked)", () => {
     await user.click(screen.getByRole("button", { name: "Create PR" }))
     expect(desktop.calls.createPullRequest[0]?.[1]).toMatchObject({ title: "Color the graph", draft: true })
     expect(await screen.findByText(/#1 Color the graph/)).toBeInTheDocument()
-    expect(screen.getByText(/draft/i)).toBeInTheDocument()
+    expect(document.querySelector(".pr-item")?.textContent).toMatch(/draft/i)
 
     await user.click(screen.getByRole("button", { name: "Mark ready" }))
     expect(desktop.calls.markReady).toEqual([1])
