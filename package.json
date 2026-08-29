@@ -1,0 +1,62 @@
+{
+  "name": "origin-git-graph",
+  "productName": "Origin Git Graph",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Windows desktop Git Graph for Cursor Origin repositories.",
+  "author": "Wilson",
+  "license": "MIT",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite",
+    "open": "node scripts/install-and-open.mjs",
+    "update": "node scripts/update-app.mjs",
+    "uninstall": "node scripts/uninstall-app.mjs",
+    "uninstall:wipe": "node scripts/uninstall-app.mjs --remove-app-dir --confirm=UNINSTALL",
+    "dist": "vite build && electron-builder"
+  },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "electron": "^37.3.1",
+    "electron-builder": "^26.0.12",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.3",
+    "vite-plugin-electron": "^0.29.0",
+    "vite-plugin-electron-renderer": "^0.14.6"
+  },
+  "build": {
+    "appId": "com.wilsonwong.origin-git-graph",
+    "productName": "Origin Git Graph",
+    "files": ["dist/**", "dist-electron/**", "scripts/**"],
+    "directories": { "output": "release" },
+    "win": {
+      "target": ["portable", "nsis"]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Origin Git Graph",
+      "uninstallDisplayName": "Origin Git Graph",
+      "artifactName": "OriginGitGraph-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "OriginGitGraph-${version}-portable.${ext}"
+    },
+    "linux": {
+      "target": ["AppImage"]
+    }
+  }
+}
