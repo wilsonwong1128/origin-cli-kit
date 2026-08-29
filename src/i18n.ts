@@ -82,7 +82,7 @@ const dict = {
     noPr: "未有 PR。",
     confirmPull: "Pull 只用 fast-forward。如果遠端有分歧歷史，會失敗而唔會自動 merge。",
     confirmPush: "會 push 而家呢條 HEAD 去 origin。唔會 force push。",
-    confirmMerge: "會做 no-ff merge。如果有衝突，要喎改動面板解決。",
+    confirmMerge: "會做 no-ff merge。如果有衝突，要喺改動面板解決。",
     confirmDiscard: "丟棄工作區改動。未追蹤檔案唔會自動刪。呢步唔可以還原。",
     confirmDelete: "刪除本機 branch。未 merge 嘅內容可能會冇。",
     confirmLogout: "會清本地 Origin 憑證。",
@@ -107,7 +107,7 @@ const dict = {
     uninstallWipe: "徹底刪除",
     confirmUninstallWipe: "連呢個 app 資料夾都會刪。輸入 UNINSTALL 先繼續。",
     uninstallWord: "UNINSTALL",
-    nsisHint: "如果係用 Setup.exe 安裝，亦可喎 Windows「設定 → 應用程式」卸載。",
+    nsisHint: "如果係用 Setup.exe 安裝，亦可喺 Windows「設定 → 應用程式」卸載。",
   },
   "zh-Hans": {
     app: "Origin Git Graph",
