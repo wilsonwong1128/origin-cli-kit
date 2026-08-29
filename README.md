@@ -1,28 +1,28 @@
 # Origin Git Graph
 
+Public source: https://github.com/wilsonwong1128/origin-cli-kit
+
 Windows / Linux desktop app：本機視窗睜 Git commit graph，並接 Cursor Origin。
 
 唔係瀏覽器網站，亦唔係 Cursor extension。
 
-Public repo: https://github.com/wilsonwong1128/origin-cli-kit
+## 撞一下就裝同開
 
-## One-click install and open
+clone 完之後撞呢個檔：
 
-After clone, click:
+- Windows：`Install-and-Open.bat`
+- WSL / Linux：`./install-and-open.sh`
 
-- Windows: `Install-and-Open.bat`
-- WSL / Linux: `./install-and-open.sh`
+第一次會裝依賴、組裝 app、加桌面捷徑，然後開啟 Origin Git Graph。
+之後撞桌面 **Origin Git Graph** 就直接開。
 
-First run installs dependencies, builds the app, adds a desktop shortcut, then opens Origin Git Graph.
-Later, click the **Origin Git Graph** desktop shortcut.
+## 之後點更新
 
-## Update
+只用 fast-forward，唔會自動 merge。App 資料夾有本地改動就會拒絕（避免覆蓋）。
 
-Fast-forward only. Aborts if this app folder has local changes.
-
-- Windows: `Update.bat`
-- WSL / Linux: `./update.sh`
-- In the app: **Settings → Update app**
+- Windows：`Update.bat`
+- WSL / Linux：`./update.sh`
+- App 入面：**設定 → 更新 app**（會關視窗、更新、再重開）
 
 ```bash
 git pull --ff-only
@@ -30,45 +30,45 @@ npm install
 npm run build
 ```
 
-If you installed with `Setup.exe`, run the newer `OriginGitGraph-Setup-*.exe`.
+用 `Setup.exe` 裝嘅話，下載新嘅 `OriginGitGraph-Setup-*.exe` 再撞一次就會覆蓋安裝。
 
-## Uninstall
+## 點卸載
 
-Does not delete your other Git repos.
+兩級，先清安裝檔，唔會默默刪走你其他 Git 倉庫。
 
-1. Normal uninstall (keeps source so you can install again)
-   - Windows: `Uninstall.bat`
-   - WSL / Linux: `./uninstall.sh`
-   - App: **Settings → Uninstall**
-   - Removes shortcuts, `node_modules`, `dist`, portable Node, Electron userData
-2. Delete this app folder
-   - Windows: `Uninstall-Wipe.bat` — type `UNINSTALL`
+1. **一般卸載**（留低原始碼，之後可以再裝）
+   - Windows：`Uninstall.bat`
+   - WSL / Linux：`./uninstall.sh`
+   - App：**設定 → 卸載**
+   - 會刪：桌面／開始功能表捷徑、`node_modules`、`dist`、便攜 Node、Electron userData
+2. **徹底刪除呢個 app 資料夾**
+   - Windows：`Uninstall-Wipe.bat` — type `UNINSTALL`
    - `./uninstall.sh --wipe`
-   - App: **Settings → Delete everything** (type `UNINSTALL`)
+   - App：**設定 → 徹底刪除**（輸入 `UNINSTALL`）
 
-Setup.exe installs can also be removed from Windows **Settings → Apps**.
+用 Setup.exe 裝嘅，亦可以喺 Windows **設定 → 應用程式** 卸載。
 
-If Node is missing, Windows downloads a portable copy without changing your system.
-Or install [Node.js 20+](https://nodejs.org/) and [Git for Windows](https://git-scm.com/download/win).
+如果未有 Node，Windows 會自動下載便攜版，唔會改你系統。
+想自己裝可以用 [Node.js 20+](https://nodejs.org/) 同 [Git for Windows](https://git-scm.com/download/win)。
 
-## Features
+## 功能
 
-- Commit graph with connected branch / merge lines
-- Switch repos quickly
-- Create a new Origin project
-- Pull requests: create, mark ready, merge
-- Demo repository
+- Commit graph：色線連住 branch / merge
+- 快速換 repo
+- 開新 Origin project
+- Pull requests：開 PR、Mark ready、Merge
+- 示範倉庫
 
-Windows paths `C:\Users\...` become `/mnt/c/...` under WSL.
+Windows 路徑 `C:\Users\...` 喺 WSL 會轉成 `/mnt/c/...`。
 
-Origin CLI is macOS / Linux / WSL only:
+Origin CLI 只支援 macOS / Linux / WSL：
 
 ```bash
 curl -fsSL https://downloads.cursor.com/origin/install.sh | sh
 origin auth login
 ```
 
-## Commands
+## 手動指令
 
 ```bash
 npm install
@@ -76,13 +76,13 @@ npm start
 npm run open
 ```
 
-## Packaged installer
+## 打包安裝程式
 
 ```powershell
 npm run dist
 ```
 
-In `release/`:
+`release/` 入面：
 
-- `OriginGitGraph-Setup-0.1.0.exe`: one-click install, then opens
-- `OriginGitGraph-0.1.0-portable.exe`: click to open
+- `OriginGitGraph-Setup-0.1.0.exe`：撞一下安裝，裝完自動開
+- `OriginGitGraph-0.1.0-portable.exe`：撞就開
