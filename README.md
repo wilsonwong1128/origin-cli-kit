@@ -84,7 +84,8 @@ Early beta. The test API and npm scripts can change without notice. Software is 
 npm test          # unit + UI (mocked; never hits live Origin)
 npm run test:unit
 npm run test:ui
-npm run test:e2e  # Playwright, mocked IPC, no Origin CLI
+npm run test:e2e         # real Electron window (Linux). Does not prove Windows native Origin CLI.
+npm run test:e2e:mocked  # Vite renderer + mocked IPC only
 npm run test:live # skipped unless Origin CLI is already signed in and a namespace is already claimed
 ```
 

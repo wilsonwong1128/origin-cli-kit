@@ -12,5 +12,5 @@
     "isolatedModules": true,
     "types": ["node"]
   },
-  "include": ["src", "electron", "shared", "test", "vitest.config.ts", "playwright.config.ts", "vite.e2e.config.ts"]
+  "include": ["src", "electron", "shared", "test", "vitest.config.ts", "playwright.config.ts", "playwright.electron.config.ts", "vite.e2e.config.ts"]
 }

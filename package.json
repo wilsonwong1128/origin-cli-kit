@@ -19,7 +19,8 @@
     "test": "vitest run --project unit --project ui",
     "test:unit": "vitest run --project unit",
     "test:ui": "vitest run --project ui",
-    "test:e2e": "playwright test --config=playwright.config.ts",
+    "test:e2e": "npm run build && playwright test --config=playwright.electron.config.ts",
+    "test:e2e:mocked": "playwright test --config=playwright.config.ts",
     "test:live": "vitest run --project live"
   },
   "dependencies": {
