@@ -260,9 +260,14 @@ test.describe("Real Electron Git Graph", () => {
       }
     } finally {
       writeReport(steps)
-      await electronApp.evaluate(({ app }) => app.quit()).catch(() => undefined)
-      await electronApp.close().catch(() => undefined)
-      electronApp.process()?.kill("SIGKILL")
+      const child = electronApp.process()
+      if (child?.pid) {
+        try {
+          process.kill(child.pid, "SIGKILL")
+        } catch {
+          // already gone
+        }
+      }
     }
 
     const hardFails = steps.filter(
