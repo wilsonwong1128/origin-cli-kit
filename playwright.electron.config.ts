@@ -5,7 +5,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  timeout: 120_000,
+  timeout: 90_000,
+  teardownTimeout: 10_000,
   expect: { timeout: 15_000 },
   use: {
     locale: "en-US",

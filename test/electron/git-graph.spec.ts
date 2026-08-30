@@ -1,12 +1,10 @@
-import { createRequire } from "node:module"
 import { mkdirSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { _electron as electron, expect, test, type ElectronApplication, type Page } from "@playwright/test"
 
 import { seedLocalRepoPair } from "./seed-local-repos"
 
-const require = createRequire(import.meta.url)
-const electronBin = require("electron") as string
+const electronBin = path.join(process.cwd(), "node_modules/electron/dist/electron")
 
 const SHOT_DIR = "/opt/cursor/artifacts/screenshots"
 const REPORT = path.join(SHOT_DIR, "electron-steps.md")
@@ -128,6 +126,7 @@ test.describe("Real Electron Git Graph", () => {
       }
       await page.getByRole("button", { name: "Open folder" }).click()
       await expect(page.locator("aside .name")).toHaveText(path.basename(repos.alpha), { timeout: 20_000 })
+      await expect(page.locator(".modal-backdrop")).toHaveCount(0)
       await expect(page.getByText("Colored lines are branches / merges")).toBeVisible()
       const strokes = await page.locator("svg.graph-svg path").evaluateAll((nodes) =>
         nodes.map((node) => node.getAttribute("stroke")),
@@ -154,6 +153,7 @@ test.describe("Real Electron Git Graph", () => {
       await page.getByRole("button", { name: "Switch repo" }).click()
       await page.getByRole("button", { name: "Open folder" }).click()
       await expect(page.locator("aside .name")).toHaveText(path.basename(repos.beta), { timeout: 20_000 })
+      await expect(page.locator(".modal-backdrop")).toHaveCount(0)
       record({
         step: "switch repo (local repo B)",
         result: "PASS",
@@ -260,7 +260,9 @@ test.describe("Real Electron Git Graph", () => {
       }
     } finally {
       writeReport(steps)
+      await electronApp.evaluate(({ app }) => app.quit()).catch(() => undefined)
       await electronApp.close().catch(() => undefined)
+      electronApp.process()?.kill("SIGKILL")
     }
 
     const hardFails = steps.filter(
