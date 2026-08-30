@@ -1,11 +1,12 @@
+import { spawn, type ChildProcess } from "node:child_process"
 import { mkdirSync, writeFileSync } from "node:fs"
+import net from "node:net"
 import path from "node:path"
-import { _electron as electron, expect, test, type ElectronApplication, type Page } from "@playwright/test"
+import { chromium, expect, test, type Browser, type Page } from "@playwright/test"
 
 import { seedLocalRepoPair } from "./seed-local-repos"
 
 const electronBin = path.join(process.cwd(), "node_modules/electron/dist/electron")
-
 const SHOT_DIR = "/opt/cursor/artifacts/screenshots"
 const REPORT = path.join(SHOT_DIR, "electron-steps.md")
 
@@ -33,15 +34,39 @@ function writeReport(steps: Step[]): void {
   writeFileSync(REPORT, lines.join("\n"))
 }
 
-async function stubOpenFolder(app: ElectronApplication, folder: string): Promise<void> {
-  await app.evaluate(({ dialog }, next) => {
-    const g = globalThis as typeof globalThis & { __oggOpenFolder?: string }
-    g.__oggOpenFolder = next
-    dialog.showOpenDialog = async () => ({
-      canceled: false,
-      filePaths: [g.__oggOpenFolder ?? next],
+async function freePort(): Promise<number> {
+  return await new Promise((resolve, reject) => {
+    const server = net.createServer()
+    server.unref()
+    server.on("error", reject)
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address()
+      if (!address || typeof address === "string") {
+        server.close()
+        reject(new Error("no port"))
+        return
+      }
+      const port = address.port
+      server.close(() => resolve(port))
     })
-  }, folder)
+  })
+}
+
+async function waitForCdp(port: number, timeoutMs = 20_000): Promise<void> {
+  const started = Date.now()
+  while (Date.now() - started < timeoutMs) {
+    const ok = await new Promise<boolean>((resolve) => {
+      const socket = net.connect({ host: "127.0.0.1", port })
+      socket.once("connect", () => {
+        socket.end()
+        resolve(true)
+      })
+      socket.once("error", () => resolve(false))
+    })
+    if (ok) return
+    await new Promise((resolve) => setTimeout(resolve, 200))
+  }
+  throw new Error(`Electron CDP did not listen on ${port}`)
 }
 
 test.describe("Real Electron Git Graph", () => {
@@ -54,27 +79,39 @@ test.describe("Real Electron Git Graph", () => {
 
     const repos = seedLocalRepoPair()
     const userData = path.join("/tmp", `ogg-electron-user-${Date.now()}`)
+    const folderFile = path.join("/tmp", `ogg-e2e-folder-${Date.now()}.txt`)
     mkdirSync(userData, { recursive: true })
+    writeFileSync(folderFile, repos.alpha)
 
-    const electronApp = await electron.launch({
-      executablePath: electronBin,
-      args: [
-        path.resolve("dist-electron/main.js"),
-        "--no-sandbox",
-        `--user-data-dir=${userData}`,
-      ],
-      cwd: process.cwd(),
-      env: {
-        ...process.env,
-        DISPLAY: process.env.DISPLAY || ":1",
-        ELECTRON_DISABLE_GPU: "1",
-      },
-    })
+    const port = await freePort()
+    let child: ChildProcess | undefined
+    let browser: Browser | undefined
 
     try {
-      const page = await electronApp.firstWindow({ timeout: 30_000 })
+      child = spawn(
+        electronBin,
+        [
+          path.resolve("dist-electron/main.js"),
+          "--no-sandbox",
+          `--remote-debugging-port=${port}`,
+          `--user-data-dir=${userData}`,
+        ],
+        {
+          cwd: process.cwd(),
+          env: {
+            ...process.env,
+            DISPLAY: process.env.DISPLAY || ":1",
+            ELECTRON_DISABLE_GPU: "1",
+            OGG_E2E_OPEN_FOLDER_FILE: folderFile,
+          },
+          stdio: "ignore",
+        },
+      )
+      await waitForCdp(port)
+      browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`)
+      const context = browser.contexts()[0] ?? (await browser.newContext())
+      const page = context.pages()[0] ?? (await context.waitForEvent("page", { timeout: 15_000 }))
       await page.waitForLoadState("domcontentloaded")
-      await stubOpenFolder(electronApp, repos.alpha)
 
       await page.evaluate(() => {
         window.localStorage.setItem(
@@ -149,7 +186,7 @@ test.describe("Real Electron Git Graph", () => {
         throw new Error("Graph did not render multiple colored lines")
       }
 
-      await stubOpenFolder(electronApp, repos.beta)
+      writeFileSync(folderFile, repos.beta)
       await page.getByRole("button", { name: "Switch repo" }).click()
       await page.getByRole("button", { name: "Open folder" }).click()
       await expect(page.locator("aside .name")).toHaveText(path.basename(repos.beta), { timeout: 20_000 })
@@ -260,7 +297,7 @@ test.describe("Real Electron Git Graph", () => {
       }
     } finally {
       writeReport(steps)
-      const child = electronApp.process()
+      await browser?.close().catch(() => undefined)
       if (child?.pid) {
         try {
           process.kill(child.pid, "SIGKILL")

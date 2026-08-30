@@ -1,5 +1,5 @@
 import { execFile, spawn } from "node:child_process"
-import { existsSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { promisify } from "node:util"
 import { app, BrowserWindow, dialog, ipcMain, shell } from "electron"
@@ -71,6 +71,11 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   ipcMain.handle("dialog:openFolder", async () => {
+    const e2eFile = process.env.OGG_E2E_OPEN_FOLDER_FILE
+    if (e2eFile && existsSync(e2eFile)) {
+      const chosen = readFileSync(e2eFile, "utf8").trim()
+      if (chosen) return chosen
+    }
     const result = await dialog.showOpenDialog({
       title: "Choose a folder",
       properties: ["openDirectory", "createDirectory"],
